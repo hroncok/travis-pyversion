@@ -64,7 +64,7 @@ async def repos_page(session, url, page, version):
     await asyncio.gather(*futures)
 
 
-async def all_repos(username, version, token):
+async def all_repos(username, version, token, repo_type):
     futures = set()
     async with aiohttp.ClientSession() as session:
         if token:
@@ -72,7 +72,7 @@ async def all_repos(username, version, token):
         else:
             session.headers = dict()
         url = (f'https://api.github.com/users/{username}'
-               '/repos?sort=pushed&type=all&visibility=public')
+               f'/repos?sort=pushed&type={repo_type}&visibility=public')
         repos, headers = await fetch_json_headers(session, url)
         for repo in repos:
             futures.add(asyncio.ensure_future(process_repo(session, repo,
@@ -113,9 +113,13 @@ def parse_last_page(header):
               prompt='GitHub token (leave empty for anonymous fetching)',
               hide_input=True,
               default='')
-def main(username, version, token):
+@click.option('--repo-type',
+              type=click.Choice(['all', 'owner', 'member']),
+              help='Repo types to check, default: all',
+              default='all')
+def main(username, version, token, repo_type):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(all_repos(username, version, token))
+    loop.run_until_complete(all_repos(username, version, token, repo_type))
     loop.close()
 
 
