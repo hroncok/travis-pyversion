@@ -42,7 +42,9 @@ def versions_str(versions):
         return str(versions)
 
 
-async def process_repo(session, repo, version):
+async def process_repo(session, repo, version, forks):
+    if not forks and repo['fork']:
+        return
     travis_yml = await fetch_travis_yml(session, repo['full_name'])
     if travis_yml is not None and 'python' in travis_yml:
         if is_version_in_python(version, travis_yml['python']):
@@ -55,16 +57,16 @@ async def process_repo(session, repo, version):
                    versions_str(travis_yml['python']), err=err)
 
 
-async def repos_page(session, url, page, version):
+async def repos_page(session, url, page, version, forks):
     futures = set()
     repos, _ = await fetch_json_headers(session, url.format(page))
     for repo in repos:
         futures.add(asyncio.ensure_future(process_repo(session, repo,
-                                                       version)))
+                                                       version, forks)))
     await asyncio.gather(*futures)
 
 
-async def all_repos(username, version, token, repo_type):
+async def all_repos(username, version, token, repo_type, forks):
     futures = set()
     async with aiohttp.ClientSession() as session:
         if token:
@@ -76,12 +78,12 @@ async def all_repos(username, version, token, repo_type):
         repos, headers = await fetch_json_headers(session, url)
         for repo in repos:
             futures.add(asyncio.ensure_future(process_repo(session, repo,
-                                                           version)))
+                                                           version, forks)))
         url, last_page = parse_last_page(headers['Link'])
         if last_page > 1:
             for p in range(2, last_page + 1):
                 futures.add(asyncio.ensure_future(repos_page(session, url, p,
-                                                             version)))
+                                                             version, forks)))
         await asyncio.gather(*futures)
 
 
@@ -117,9 +119,12 @@ def parse_last_page(header):
               type=click.Choice(['all', 'owner', 'member']),
               help='Repo types to check, default: all',
               default='all')
-def main(username, version, token, repo_type):
+@click.option('--forks/--no-forks', default=False,
+              help='Whether to check forks (default is not to)')
+def main(username, version, token, repo_type, forks):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(all_repos(username, version, token, repo_type))
+    loop.run_until_complete(all_repos(username, version, token,
+                                      repo_type, forks))
     loop.close()
 
 
