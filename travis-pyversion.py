@@ -79,11 +79,13 @@ async def all_repos(username, version, token, repo_type, forks):
         for repo in repos:
             futures.add(asyncio.ensure_future(process_repo(session, repo,
                                                            version, forks)))
-        url, last_page = parse_last_page(headers['Link'])
-        if last_page > 1:
-            for p in range(2, last_page + 1):
-                futures.add(asyncio.ensure_future(repos_page(session, url, p,
-                                                             version, forks)))
+        if 'Link' in headers:
+            url, last_page = parse_last_page(headers['Link'])
+            if last_page > 1:
+                for p in range(2, last_page + 1):
+                    futures.add(asyncio.ensure_future(repos_page(session, url,
+                                                                 p, version,
+                                                                 forks)))
         await asyncio.gather(*futures)
 
 
