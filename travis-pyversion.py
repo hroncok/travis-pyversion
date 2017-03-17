@@ -104,23 +104,23 @@ def parse_last_page(header):
 
 @click.command()
 @click.option('--username', prompt='GitHub username',
-              help='Your GitHub username',
+              help='Your GitHub username.',
               default=getpass.getuser())
 @click.option('--version', prompt='Python version',
-              help='Python version to check',
+              help='Python version to check.',
               default=PY_VERSION)
 @click.option('--token',
               help='GitHub token (optional, will fetch '
-                   'anonymously if not provided, may hit rate limit)',
+                   'anonymously if not provided, may hit rate limit).',
               prompt='GitHub token (leave empty for anonymous fetching)',
               hide_input=True,
               default='')
 @click.option('--repo-type',
               type=click.Choice(['all', 'owner', 'member']),
-              help='Repo types to check, default: all',
+              help='Repo types to check, default: all.',
               default='all')
 @click.option('--forks/--no-forks', default=False,
-              help='Whether to check forks (default is not to)')
+              help='Whether to check forks (default is not to).')
 def main(username, version, token, repo_type, forks):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(all_repos(username, version, token,
