@@ -122,6 +122,13 @@ def parse_last_page(header):
 @click.option('--forks/--no-forks', default=False,
               help='Whether to check forks (default is not to).')
 def main(username, version, token, repo_type, forks):
+    '''
+    Checks your GitHub repos with .travis.yml for the given Python
+    version. Reports back good and back repos. Good repos are green on stdout,
+    bad repos are red on stderr.
+
+    Report bugs at https://github.com/hroncok/travis-pyversion/issues
+    '''
     loop = asyncio.get_event_loop()
     loop.run_until_complete(all_repos(username, version, token,
                                       repo_type, forks))
