@@ -29,10 +29,10 @@ async def fetch_travis_yml(session, repo_slug):
 
 
 def is_version_in_python(version, python):
-    try:
-        return version in python
-    except TypeError:
-        return version == str(python)
+    if isinstance(python, list):
+        return str(version) in (str(p) for p in python)
+    else:
+        return str(version) == str(python)
 
 
 def versions_str(versions):
