@@ -1,4 +1,6 @@
 language: python
 python: 3.6
-
-script: python travis-pyversion.py --username hroncok --version 3.6
+script: python travis-pyversion.py --username hroncok --version 3.6 --token $GITHUB_TOKEN
+env:
+  global:
+    secure: NNemZRRNsNVRcVseTDxUWLPuiKMxOFH0O7lMrJgt4TvsflVy1KRpzv+bNBNqgIE6go+47V/oCE3VHjlsWk1ZlkpmfxXUTR5aJ+aFJNPH0YjKO44Ydx+fRfKyZSn9ym7flSzEkOtFYGamkMD1B1tTzz37/74FlCNFJwk3fQKvxlNAQFuPKe3I2pR/1M+e1lHki64pkIWpeLdPiFcfSo08cFbtHnQvW+W6dEU6guE70MeyZRCA5hmLTgxycayCpssp1Uvj/XxYf8seMG9DA87OhRM457pwSuVO2OVIYslevfOxJEWQZNUhCGmHfehHwnUL8oVNLGQRDoW2TKvuzTxUoo8oq6l2/R9d6GHY5V5Mt+zbbfesu001NTRfxbgy6vLi/06+CEHIEj/BeVtkqdaPW350GDiaNtVLSNhLJAvZNKCrh6bNZNrXH43337cfgRHA4+hPq9JlTNXnYkV5/eIJP8mGmDacf4izmRxAicawmNO0vdLWrUwqrk8hEKyeTc86rr78BgGiML8VhtMEIcrBBFK5YMtiMCwRx3y7QGVLCOKygirmHtQXv1zC0rgjJGruPjTQdDdmyTgctzlRoVxVCKYyCxummgwtoLXdtMRO+0F/ieT6VvAmNwjuSsSS/I9h89nE3JEzIcSWvRnzb/hPRExfN8N4T/mgQ/shmFNXicg=
