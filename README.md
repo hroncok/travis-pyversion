@@ -45,10 +45,7 @@ Python versions in there. Please note that repos containing the specified
 version of Python will be green and printed to the standard output, whereas
 repos without it will be red and printed to the standard error. 
 
-    pyvec/elsa: 3.5, 3.6, nightly
-    hroncok/kojistatus: 3.3, 3.4, 3.5, 3.6
-    ...
-
+![Screenshot](screenshot.png)
 
 License
 -------
