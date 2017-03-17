@@ -54,12 +54,6 @@ def parse_last_page(header):
             return url, last_page
 
 
-def echo_bad_repos(username, version, token):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(all_repos(username))
-    loop.close()
-
-
 @click.command()
 @click.option('--username', prompt='GitHub username',
               help='Your GitHub username',
@@ -74,7 +68,9 @@ def echo_bad_repos(username, version, token):
               hide_input=True,
               default='')
 def main(username, version, token):
-    echo_bad_repos(username, version, token)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(all_repos(username))
+    loop.close()
 
 
 if __name__ == '__main__':
