@@ -8,35 +8,51 @@ import click
 
 
 PY_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
+futures = set()
 
 
-async def fetch(session, url):
+async def fetch_json_headers(session, url):
     with async_timeout.timeout(10):
-        async with session.get(url) as response:
+        async with session.get(url, headers=session.headers) as response:
             response.raise_for_status()
             return await response.json(), response.headers
 
 
-async def process_repo(repo):
-    click.echo(repo['full_name'])
+async def fetch_travis_yml(session, repo_slug):
+    url = f'https://raw.githubusercontent.com/{repo_slug}/master/.travis.yml'
+    with async_timeout.timeout(10):
+        async with session.get(url) as response:
+            if response.status == 404:
+                return None
+            response.raise_for_status()
+            return await response.text()
+
+
+async def process_repo(session, repo):
+    travis_yml = await fetch_travis_yml(session, repo['full_name'])
+    if travis_yml:
+        click.echo(repo['full_name'])
 
 
 async def repos_page(session, url, page):
-    repos, _ = await fetch(session, url.format(page))
+    repos, _ = await fetch_json_headers(session, url.format(page))
     for repo in repos:
-        asyncio.ensure_future(process_repo(repo))
+        futures.add(asyncio.ensure_future(process_repo(session, repo)))
 
 
-async def all_repos(username):
+async def all_repos(username, token):
     async with aiohttp.ClientSession() as session:
-        url = f'https://api.github.com/users/{username}/repos?sort=pushed'
-        repos, headers = await fetch(session, url)
+        session.headers = {'Authorization': 'token ' + token}
+        url = (f'https://api.github.com/users/{username}'
+               '/repos?sort=pushed&type=all')
+        repos, headers = await fetch_json_headers(session, url)
         for repo in repos:
-            await process_repo(repo)
+            futures.add(asyncio.ensure_future(process_repo(session, repo)))
         url, last_page = parse_last_page(headers['Link'])
         if last_page > 1:
             for p in range(2, last_page + 1):
-                await asyncio.ensure_future(repos_page(session, url, p))
+                futures.add(asyncio.ensure_future(repos_page(session, url, p)))
+        await asyncio.gather(*futures)
 
 
 def parse_last_page(header):
@@ -69,7 +85,7 @@ def parse_last_page(header):
               default='')
 def main(username, version, token):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(all_repos(username))
+    loop.run_until_complete(all_repos(username, token))
     loop.close()
 
 
