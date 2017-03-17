@@ -62,8 +62,8 @@ def parse_last_page(header):
               help='Python version to check',
               default=PY_VERSION)
 @click.option('--token',
-              help='GitHub token (option, will fetch '
-                   'anonymously if not provided)',
+              help='GitHub token (optional, will fetch '
+                   'anonymously if not provided, may hit rate limit)',
               prompt='GitHub token (leave empty for anonymous fetching)',
               hide_input=True,
               default='')
