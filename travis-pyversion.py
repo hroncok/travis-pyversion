@@ -105,8 +105,8 @@ def parse_last_page(header):
 
 
 @click.command()
-@click.option('--username', prompt='GitHub username',
-              help='Your GitHub username.',
+@click.option('--username', prompt='GitHub username/organization',
+              help='Your GitHub username/organization.',
               default=getpass.getuser())
 @click.option('--version', prompt='Python version',
               help='Python version to check.',

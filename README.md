@@ -22,7 +22,7 @@ Usage
     Usage: travis-pyversion.py [OPTIONS]
     
     Options:
-      --username TEXT                 Your GitHub username.
+      --username TEXT                 Your GitHub username/organization.
       --version TEXT                  Python version to check.
       --token TEXT                    GitHub token (optional, will fetch
                                       anonymously if not provided, may hit rate
