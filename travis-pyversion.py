@@ -5,10 +5,10 @@ import sys
 import aiohttp
 import async_timeout
 import click
+import yaml
 
 
 PY_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
-futures = set()
 
 
 async def fetch_json_headers(session, url):
@@ -25,33 +25,63 @@ async def fetch_travis_yml(session, repo_slug):
             if response.status == 404:
                 return None
             response.raise_for_status()
-            return await response.text()
+            return yaml.load(await response.text())
 
 
-async def process_repo(session, repo):
+def is_version_in_python(version, python):
+    try:
+        return version in python
+    except TypeError:
+        return version == str(python)
+
+
+def versions_str(versions):
+    if isinstance(versions, list):
+        return ', '.join(sorted(str(version) for version in versions))
+    else:
+        return str(versions)
+
+
+async def process_repo(session, repo, version):
     travis_yml = await fetch_travis_yml(session, repo['full_name'])
-    if travis_yml:
-        click.echo(repo['full_name'])
+    if travis_yml is not None and 'python' in travis_yml:
+        if is_version_in_python(version, travis_yml['python']):
+            color = 'green'
+            err = False
+        else:
+            color = 'red'
+            err = True
+        click.echo(click.style(repo['full_name'] + ': ', fg=color, bold=True) +
+                   versions_str(travis_yml['python']), err=err)
 
 
-async def repos_page(session, url, page):
+async def repos_page(session, url, page, version):
+    futures = set()
     repos, _ = await fetch_json_headers(session, url.format(page))
     for repo in repos:
-        futures.add(asyncio.ensure_future(process_repo(session, repo)))
+        futures.add(asyncio.ensure_future(process_repo(session, repo,
+                                                       version)))
+    await asyncio.gather(*futures)
 
 
-async def all_repos(username, token):
+async def all_repos(username, version, token):
+    futures = set()
     async with aiohttp.ClientSession() as session:
-        session.headers = {'Authorization': 'token ' + token}
+        if token:
+            session.headers = {'Authorization': 'token ' + token}
+        else:
+            session.headers = dict()
         url = (f'https://api.github.com/users/{username}'
-               '/repos?sort=pushed&type=all')
+               '/repos?sort=pushed&type=all&visibility=public')
         repos, headers = await fetch_json_headers(session, url)
         for repo in repos:
-            futures.add(asyncio.ensure_future(process_repo(session, repo)))
+            futures.add(asyncio.ensure_future(process_repo(session, repo,
+                                                           version)))
         url, last_page = parse_last_page(headers['Link'])
         if last_page > 1:
             for p in range(2, last_page + 1):
-                futures.add(asyncio.ensure_future(repos_page(session, url, p)))
+                futures.add(asyncio.ensure_future(repos_page(session, url, p,
+                                                             version)))
         await asyncio.gather(*futures)
 
 
@@ -85,7 +115,7 @@ def parse_last_page(header):
               default='')
 def main(username, version, token):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(all_repos(username, token))
+    loop.run_until_complete(all_repos(username, version, token))
     loop.close()
 
 
